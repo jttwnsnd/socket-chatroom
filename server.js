@@ -24,14 +24,13 @@ var io = socketIo.listen(server);
 var socketUsers = [];
 // we need to deal with a new socket connection
 io.sockets.on('connect',function(socket){
+	console.log(socket.id);
 	socketUsers.push({
-		'socketID': socket.id,
-		'name': 'Anonymous'
+		socketID: socket.id,
+		name: 'Anonymous'
 	})
-	io.sockets.emit('users', {
-		socketUsers: socketUsers
-	})
-	console.log(socketUsers);
+	io.sockets.emit('users', socketUsers);
+
 	console.log('someone has connected via a socket!');
 	socket.on('message_to_server', function(data){
 		io.sockets.emit('message_to_client', {
@@ -40,19 +39,32 @@ io.sockets.on('connect',function(socket){
 			date: data.date
 		})
 	})
-	// socket.on('user_to_server', function(name){
-	// 	io.sockets.emit('users', {
-	// 		name: name.name
-	// 	})
-	// })
-	socket.on('disconnect', function(){
-		console.log('a user has disconnected');
-		for(var i = 0; i< docketUsers.length; i++){
+
+	//someone just changed their name
+	socket.on('user_to_server', function(name){
+		console.log(socket.id);
+		for(var i = 0; i< socketUsers.length; i++){
 			if(socketUsers[i].socketID == socket.id){
-				socketUsers.splice(i, 1);
+				var temp = socketUsers[i].name
+				socketUsers[i].name = name;
+				console.log(temp + ' has updated name to ' + socketUsers[i].name);
+				break;
+			}else{
+
 			}
 		}
-		
+		io.sockets.emit('users', socketUsers);
+	})
+	socket.on('disconnect', function(){
+		console.log('a user has disconnected');
+		for(var i = 0; i< socketUsers.length; i++){
+			if(socketUsers[i].socketID == socket.id){
+				console.log(socketUsers[i].name + ' has disconnected');
+				socketUsers.splice(i, 1);
+				break;
+			}
+		}
+		io.sockets.emit('users', socketUsers);
 	})
 })
 

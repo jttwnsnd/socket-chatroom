@@ -18,37 +18,54 @@
 			box-shadow: 0px 2px 3px #333;
 			transform:  translateY(-2px);
 		}
-		#chats{
+		#chats, #user-list{
 			display:  inline-block;
 			border: 1px solid black;
 			height: 400px;
+			width: 45%;
 			border-radius: 8px;
+			float:  left;
 		}
 		#user-list{
-			display: inline-block;
-			border: 1px solid blue;
-			min-height: 400px;
-			border-radius: 8px;
+			width:  15%;
+		}
+		#chats{
+			margin-left: 10px;
 		}
 		.im{
-			margin-left: 5px;
+			margin-left: 10px;
 		}
 		.im-name{
 			font-weight:  bold;
+		}
+		#canvas{
+			display:  inline-block;
+			border: 1px solid black;
+			border-radius: 8px;
+			float:  left;
+		}
+		#tool-bar{
+			position:  absolute;
+			top: 85%;
+			left: 0;
 		}
 	</style>
 	<script type='text/javascript' src='/socket.io/socket.io.js'></script>
 	<script type='text/javascript'>
 		var socketio = io.connect('http://127.0.0.1:8080');
-		var name = 'Anony Mus';
+		var name = 'Anonymous';
+		name = prompt('What is your name?');
+
+		socketio.emit('user_to_server', name);
+
 		var usersLoggedIn = [];
 		socketio.on('message_to_client', function(data){
 			document.getElementById('chats').innerHTML += '<div class="im">' + data.message + ' -- ' + '<span class="im-name">'+ data.name + '--' + data.date + '</span></div>';
 		})
-		socketio.on('users', function(data){
+		socketio.on('users', function(socketUsers){
 			var newHtml = '';
-			for(var i = 0; i < data.socketUsers.length; i++){
-				newHtml += '<div class="col-md-12">' + data.socketUsers[i].name + '</div>';
+			for(var i = 0; i < socketUsers.length; i++){
+				newHtml += '<div class="col-md-12">' + socketUsers[i].name + '</div>';
 			}
 			document.getElementById('logged-in').innerHTML = newHtml;
 		})
@@ -61,15 +78,10 @@
 				name: name,
 				date: date
 			});
-			socketio.emit('user_to_server', {
-				name: name
-			})
 		}
 		function sendName(){
 			name = document.getElementById('nameInput').value;
-			socketio.emit('user_to_server', {
-				name: name
-			})
+			socketio.emit('user_to_server', name);
 		}
 	</script>
 </head>
@@ -83,7 +95,7 @@
 				<span class="input-group-addon" id="basic-addon1">Name</span>
 				<input type="text" id="nameInput" class="form-control" placeholder="buddy42">
 				<span class="input-group-btn">
-					<button class="btn btn-default" type="button" id="name-btn" onclick='sendName()'>Enter</button>
+					<button class="btn btn-default" type="button" id="name-btn" onclick='sendName()'>Update</button>
 				</span>
 			</div>
 			<div class="input-group" id="chat-window">
@@ -95,18 +107,79 @@
 			</div>
 			</div>
 	</div>
-	<div class='col-md-8'>
-		<div id="chats" class='col-md-8'></div>
-		<div class='col-md-2' id="user-list">
-			<div class="col-md-12">Users Logged In</div>
-			<div class="col-md-12" id="logged-in"></div>
+	<div position="relative">
+		<canvas id='canvas' width="400px" height="400px"></canvas>
+		<div id="tool-bar">
+			<input type="color" id="color-picker">
+			<label for="">Choose your thickness</label>
+			<input type="number" id='thickness-picker' placeholder="10">
 		</div>
+		<div id="chats"></div>
+		<div id="user-list">
+			<div id="logged-in"></div>
+		</div>
+		
 	</div>
-<script src='https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular.min.js'></script>
 <script>
-	var myApp = angular.module('myApp',[])
-	myApp.controller('myController', function($scope){
-		$scope.message = 'Test';
+	var canvas = document.getElementById('canvas');
+	var context = canvas.getContext('2d');
+	var mouseDown = false;
+	var color = '#000';
+	var thickness = 10;
+	var colorChoice = document.getElementById('color-picker');
+	var mousePosition;
+	var lastMousePosition = {};
+
+	colorChoice.addEventListener('change', function(event){
+		color = colorChoice.value;
+	})
+	var thicknessPicker = document.getElementById('thickness-picker');
+	thicknessPicker.addEventListener('change', function(event){
+		thickness = thicknessPicker.value;
+	})
+	canvas.addEventListener('mousedown', function(event){
+		mouseDown = true;
+	})
+	canvas.addEventListener('mouseup', function(event){
+		mouseDown = false;
+		lastMousePosition = null;
+	})
+	canvas.addEventListener('mousemove', function(event){
+		console.dir(canvas);
+		console.log(event);
+		if(mouseDown){
+
+			var magicBrushX = event.pageX - canvas.offsetLeft;
+			var magicBrushY = event.pageY - canvas.offsetTop;
+			mousePosition = {
+				x: magicBrushX,
+				y: magicBrushY
+			}
+			console.log(mousePosition);
+			if(lastMousePosition !== null){
+				context.strokeStyle = color;
+				context.lineJoin = 'round';
+				context.lineWidth = thickness;
+				context.beginPath();
+				context.moveTo(lastMousePosition.x, lastMousePosition.y);
+				context.lineTo(mousePosition.x, mousePosition.y);
+				context.closePath();
+				context.stroke();
+			}
+
+			var drawingData = {
+				mousePosition: mousePosition,
+				lastMousePosition: lastMousePosition,
+				color: color,
+				thickness: thickness
+			}
+			lastMousePosition = {
+				x: mousePosition.x,
+				y: mousePosition.y
+			};
+		}
+		
+		
 	})
 </script>
 </body>
