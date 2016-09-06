@@ -145,8 +145,6 @@
 		lastMousePosition = null;
 	})
 	canvas.addEventListener('mousemove', function(event){
-		console.dir(canvas);
-		console.log(event);
 		if(mouseDown){
 
 			var magicBrushX = event.pageX - canvas.offsetLeft;
@@ -155,7 +153,6 @@
 				x: magicBrushX,
 				y: magicBrushY
 			}
-			console.log(mousePosition);
 			if(lastMousePosition !== null){
 				context.strokeStyle = color;
 				context.lineJoin = 'round';
