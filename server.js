@@ -18,7 +18,7 @@ var server = http.createServer(function(req, res){
 })
 
 //Include the socketio module
-var socketIo = require('/lib/socket.io');
+var socketIo = require('socket.io');
 //listen to the server which is listening on port XXXX
 var io = socketIo.listen(server);
 var socketUsers = [];
