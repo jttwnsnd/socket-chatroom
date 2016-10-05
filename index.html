@@ -25,34 +25,76 @@
 			width: 45%;
 			border-radius: 8px;
 			float:  left;
+			overflow: scroll;
 		}
+		.input-wrapper{
+			margin-left:  -20px;
+		}
+
 		#user-list{
 			width:  15%;
 		}
 		#chats{
 			margin-left: 10px;
 		}
-		.im{
-			margin-left: 10px;
+		.im-me, .im-others{
+			
 		}
-		.im-name{
+		.me{
+			text-align: left;
+			margin:  10px 0 0 20px;
+		}
+		.others{
+			text-align: right;
+			margin:  10px 20px 0 0;
+		}
+		.im-me{
+			margin-left: 10px;
+			padding: 3px 8px;
+			display: inline-block;
+			background-color: skyblue;
+			border-radius:  5px 5px 0px 5px;
+		}
+
+		.im-others, .im-leaving{
+			margin-right: 10px;
+			padding: 3px 8px;
+			display: inline-block;
+			border-radius:  5px 5px 5px 0px;
+		}
+		.im-others{
+			background-color: pink;
+		}
+		.im-name-me{
+
+			color: blue;
+		}
+		.im-name-others{
+			color: red;
+		}
+		.im-name-me, .im-name-others{
 			font-weight:  bold;
+			font-size: 16px;
 		}
 		#canvas{
 			display:  inline-block;
 			border: 1px solid black;
 			border-radius: 8px;
 			float:  left;
+			margin-left: 10px;
 		}
 		#tool-bar{
 			position:  absolute;
-			top: 85%;
+			top: 600px;
 			left: 0;
 		}
+		.info-text{
+			font-size: 10px;
+		}
 	</style>
-	<script type='text/javascript' src='/socket.io/socket.io.js'></script>
+	<script src="https://cdn.socket.io/socket.io-1.0.0.js"></script>
 	<script type='text/javascript'>
-		var socketio = io.connect('http://127.0.0.1:8080');
+		var socketio = io.connect('http://52.34.40.208:8080');
 		var name = 'Anonymous';
 		name = prompt('What is your name?');
 
@@ -60,12 +102,24 @@
 
 		var usersLoggedIn = [];
 		socketio.on('message_to_client', function(data){
-			document.getElementById('chats').innerHTML += '<div class="im">' + data.message + ' -- ' + '<span class="im-name">'+ data.name + '--' + data.date + '</span></div>';
+			if(data.name === name){
+				document.getElementById('chats').innerHTML += '<div class="me"><div class="im-me">' + data.message + '</div><div class="info-text"><span class="im-name-me">'+ data.name + '</span>--' + data.date + '</div></div>';
+			}else{
+				document.getElementById('chats').innerHTML += '<div class="others"><div class="im-others">' + data.message + '</div></ br><div class="info-text"><span class="im-name-others">'+ data.name + '</span>--' + data.date + '</div></div>';
+			}
+			
+		})
+		socketio.on('leave_to_client', function(data){
+			document.getElementById('chats').innerHTML += '<div class="others"><div class="im-leaving"><span class="im-name-others">'+ data.name + '</span>' + data.message + '</div></ br><div class="info-text">' + data.date + '</div></div>';
 		})
 		socketio.on('users', function(socketUsers){
 			var newHtml = '';
 			for(var i = 0; i < socketUsers.length; i++){
-				newHtml += '<div class="col-md-12">' + socketUsers[i].name + '</div>';
+				if(socketUsers[i].name == name){
+					newHtml += '<div class="col-md-12 im-name-me">' + socketUsers[i].name + '</div>';
+				}else{
+					newHtml += '<div class="col-md-12 im-name-others">' + socketUsers[i].name + '</div>';
+				}
 			}
 			document.getElementById('logged-in').innerHTML = newHtml;
 		})
@@ -89,38 +143,50 @@
 <div class="col-xs-12">
 	<h1>Chat Room</h1>
 </div>
-	<div class="input-wrapper col-md-12">
-		<div class="col-md-5">
-			<div class="input-group">
-				<span class="input-group-addon" id="basic-addon1">Name</span>
-				<input type="text" id="nameInput" class="form-control" placeholder="buddy42">
-				<span class="input-group-btn">
-					<button class="btn btn-default" type="button" id="name-btn" onclick='sendName()'>Update</button>
-				</span>
-			</div>
-			<div class="input-group" id="chat-window">
-				<span class="input-group-addon" id="basic-addon1">Message</span>
-				<input type="text" id="message" class="form-control" placeholder="your message here">
-				<span class="input-group-btn">
-					<button class="btn btn-default" type="button" onclick='sendMessage()'>...</button>
-				</span>
-			</div>
-			</div>
-	</div>
+	
 	<div position="relative">
 		<canvas id='canvas' width="400px" height="400px"></canvas>
-		<div id="tool-bar">
+		<div id="tool-bar" style="margin-left:10px; text-align:center">
+			<div>Draw in the Canvas Above</div>
 			<input type="color" id="color-picker">
 			<label for="">Choose your thickness</label>
 			<input type="number" id='thickness-picker' placeholder="10">
+			<br />
+			<button class="btn btn-default" onclick="erase()">Clear Canvas</button>
 		</div>
-		<div id="chats"></div>
-		<div id="user-list">
-			<div id="logged-in"></div>
+		<div>
+			<div id="chats"></div>
+			<div id="user-list">
+				<div style="text-align:center; margin-top:5px">Logged In</div>
+				<div id="logged-in"></div>
+			</div>
+			<div class="input-wrapper col-md-4">
+				<div class="col-md-12">
+					<div class="input-group">
+						<span class="input-group-addon" id="basic-addon1">Name</span>
+						<input type="text" id="nameInput" class="form-control" placeholder="buddy42">
+						<span class="input-group-btn">
+							<button class="btn btn-default" type="button" id="name-btn" onclick='sendName()'>Update</button>
+						</span>
+						<label class="input-group-addon">Choose Name Color</label>
+						<input type="color" class="form-control" id="color-picker-name">
+					</div>
+					<div class="input-group" id="chat-window">
+						<span class="input-group-addon" id="basic-addon1">Message</span>
+						<input type="text" id="message" class="form-control" placeholder="your message here">
+						<span class="input-group-btn">
+							<button class="btn btn-default" type="button" onclick='sendMessage()'>...</button>
+						</span>
+					</div>
+				</div>
+			</div>
 		</div>
+		
 		
 	</div>
 <script>
+	var nameColorChoice = document.getElementById('color-picker-name');
+	var myName = document.getElementsByClassName('im-name-me');
 	var canvas = document.getElementById('canvas');
 	var context = canvas.getContext('2d');
 	var mouseDown = false;
@@ -129,6 +195,13 @@
 	var colorChoice = document.getElementById('color-picker');
 	var mousePosition;
 	var lastMousePosition = {};
+	var eraseData = false;
+
+	nameColorChoice.addEventListener('change', function(event){
+		for(var i = 0; i < myName.length; i++){
+			myName[i].style.color = nameColorChoice.value;
+		}
+	})
 
 	colorChoice.addEventListener('change', function(event){
 		color = colorChoice.value;
@@ -145,8 +218,6 @@
 		lastMousePosition = null;
 	})
 	canvas.addEventListener('mousemove', function(event){
-		console.dir(canvas);
-		console.log(event);
 		if(mouseDown){
 
 			var magicBrushX = event.pageX - canvas.offsetLeft;
@@ -155,7 +226,6 @@
 				x: magicBrushX,
 				y: magicBrushY
 			}
-			console.log(mousePosition);
 			if(lastMousePosition !== null){
 				context.strokeStyle = color;
 				context.lineJoin = 'round';
@@ -173,13 +243,37 @@
 				color: color,
 				thickness: thickness
 			}
+
+			socketio.emit('drawing_to_server', drawingData);
+
+
 			lastMousePosition = {
 				x: mousePosition.x,
 				y: mousePosition.y
 			};
 		}
 		
-		
+	})
+	function erase(){
+		eraseData = true;
+		context.clearRect(0, 0, canvas.width, canvas.height);
+		socketio.emit('erase_to_server', eraseData);
+	}
+	socketio.on('drawing_to_client', function(drawingData){
+		context.strokeStyle = drawingData.color;
+		context.lineJoin = 'round';
+		context.lineWidth = drawingData.thickness;
+		context.beginPath();
+		context.moveTo(drawingData.lastMousePosition.x, drawingData.lastMousePosition.y);
+		context.lineTo(drawingData.mousePosition.x, drawingData.mousePosition.y);
+		context.closePath();
+		context.stroke();
+	})
+	socketio.on('erase_to_client', function(eraseData){
+		if(eraseData){
+			context.clearRect(0, 0, canvas.width, canvas.height);
+			eraseData = false;
+		}
 	})
 </script>
 </body>

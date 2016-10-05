@@ -1,6 +1,7 @@
 {
   "name": "chat-room",
   "version": "1.0.0",
+  "privtate": true,
   "description": "a chat room built in node.js and using socket.io",
   "main": "server.js",
   "scripts": {
@@ -14,6 +15,10 @@
     "tcp",
     "http"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/jttwnsnd/socket-chatroom.git"
+  },
   "author": "JT Townsend",
   "license": "MIT",
   "dependencies": {

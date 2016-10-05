@@ -22,6 +22,11 @@ var socketIo = require('socket.io');
 //listen to the server which is listening on port XXXX
 var io = socketIo.listen(server);
 var socketUsers = [];
+var chatHistory = [];
+if(chatHistory.length > 10){
+	
+}
+var current=[];
 // we need to deal with a new socket connection
 io.sockets.on('connect',function(socket){
 	console.log(socket.id);
@@ -38,6 +43,15 @@ io.sockets.on('connect',function(socket){
 			name: data.name,
 			date: data.date
 		})
+	})
+
+	socket.on('drawing_to_server', function(drawingData){
+		if(drawingData.lastMousePosition !== null){
+			io.sockets.emit('drawing_to_client', drawingData);
+		}
+	})
+	socket.on('erase_to_server', function(eraseData){
+		io.sockets.emit('erase_to_client', eraseData)
 	})
 
 	//someone just changed their name
@@ -59,7 +73,13 @@ io.sockets.on('connect',function(socket){
 		console.log('a user has disconnected');
 		for(var i = 0; i< socketUsers.length; i++){
 			if(socketUsers[i].socketID == socket.id){
+				var date = new Date().toLocaleString();
 				console.log(socketUsers[i].name + ' has disconnected');
+				io.sockets.emit('leave_to_client', {
+					name: socketUsers[i].name,
+					message: ' has disconnected from the chat',
+					date: date,
+				})
 				socketUsers.splice(i, 1);
 				break;
 			}
