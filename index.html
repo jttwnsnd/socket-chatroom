@@ -36,6 +36,7 @@
 		}
 		#chats{
 			margin-left: 10px;
+			overflow:  scroll;
 		}
 		.im-me, .im-others{
 			
@@ -94,6 +95,10 @@
 	</style>
 	<script src="https://cdn.socket.io/socket.io-1.0.0.js"></script>
 	<script type='text/javascript'>
+		//==========================
+		//---Chatroom
+		//==========================
+		//Variables
 		var socketio = io.connect('http://52.34.40.208:8080');
 		var name = 'Anonymous';
 		name = prompt('What is your name?');
@@ -101,6 +106,27 @@
 		socketio.emit('user_to_server', name);
 
 		var usersLoggedIn = [];
+		//==========================
+		//--functions
+		//==========================
+
+		function sendMessage(){
+			var date = new Date().toLocaleString();
+			var message = document.getElementById('message').value;
+			socketio.emit('message_to_server', {
+				message: message,
+				name: name,
+				date: date
+			});
+		}
+		function sendName(){
+			name = document.getElementById('nameInput').value;
+			socketio.emit('user_to_server', name);
+		}
+
+		//==========================
+		// --- Socket.io Interactons
+		//==========================
 		socketio.on('message_to_client', function(data){
 			if(data.name === name){
 				document.getElementById('chats').innerHTML += '<div class="me"><div class="im-me">' + data.message + '</div><div class="info-text"><span class="im-name-me">'+ data.name + '</span>--' + data.date + '</div></div>';
@@ -123,20 +149,6 @@
 			}
 			document.getElementById('logged-in').innerHTML = newHtml;
 		})
-
-		function sendMessage(){
-			var date = new Date().toLocaleString();
-			var message = document.getElementById('message').value;
-			socketio.emit('message_to_server', {
-				message: message,
-				name: name,
-				date: date
-			});
-		}
-		function sendName(){
-			name = document.getElementById('nameInput').value;
-			socketio.emit('user_to_server', name);
-		}
 	</script>
 </head>
 <body ng-controller='myController'>
