@@ -110,6 +110,7 @@
 		//--functions
 		//==========================
 
+		//sends message to server.js to be served back
 		function sendMessage(){
 			var date = new Date().toLocaleString();
 			var message = document.getElementById('message').value;
@@ -119,6 +120,7 @@
 				date: date
 			});
 		}
+		//allows names to be passed back and forth between all the users.
 		function sendName(){
 			name = document.getElementById('nameInput').value;
 			socketio.emit('user_to_server', name);
@@ -127,6 +129,7 @@
 		//==========================
 		// --- Socket.io Interactons
 		//==========================
+		//receives message from server.js, which has a listener on the otherside.
 		socketio.on('message_to_client', function(data){
 			if(data.name === name){
 				document.getElementById('chats').innerHTML += '<div class="me"><div class="im-me">' + data.message + '</div><div class="info-text"><span class="im-name-me">'+ data.name + '</span>--' + data.date + '</div></div>';
@@ -135,6 +138,7 @@
 			}
 			
 		})
+		//receives from server.js that a client has left
 		socketio.on('leave_to_client', function(data){
 			document.getElementById('chats').innerHTML += '<div class="others"><div class="im-leaving"><span class="im-name-others">'+ data.name + '</span>' + data.message + '</div></ br><div class="info-text">' + data.date + '</div></div>';
 		})
